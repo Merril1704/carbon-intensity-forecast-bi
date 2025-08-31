@@ -1,0 +1,220 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import joblib
+import os
+
+class CarbonIntensityAnomalyDetector:
+    def __init__(self, encoding_dim=10):
+        self.encoding_dim = encoding_dim
+        self.scaler = StandardScaler()
+        self.autoencoder = None
+        self.threshold = None
+        
+    def load_data(self, folder_path):
+        """Load and combine all CSV files from folder"""
+        csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
+        dataframes = []
+        
+        for file in csv_files:
+            df = pd.read_csv(os.path.join(folder_path, file))
+            dataframes.append(df)
+            
+        combined_df = pd.concat(dataframes, ignore_index=True)
+        return combined_df
+    
+    def preprocess_data(self, df):
+        """Prepare features for autoencoder"""
+        # Select numerical features for anomaly detection
+        feature_columns = [
+            'carbon_intensity', 'carbon_free_percentage', 'renewable_percentage',
+            'Carbon_Efficiency', 'Clean_Energy_Gap', 'Carbon_Intensity_MA_24h',
+            'RE_Percentage_MA_24h', 'Hour', 'DayOfWeek', 'Month', 'Quarter'
+        ]
+        
+        # Handle missing values
+        X = df[feature_columns].fillna(df[feature_columns].median())
+        
+        # Scale features
+        X_scaled = self.scaler.fit_transform(X)
+        
+        return X_scaled, feature_columns
+    
+    def build_autoencoder(self, input_dim):
+        """Build autoencoder architecture"""
+        # Encoder
+        input_layer = keras.Input(shape=(input_dim,))
+        encoded = layers.Dense(64, activation='relu')(input_layer)
+        encoded = layers.Dense(32, activation='relu')(encoded)
+        encoded = layers.Dense(self.encoding_dim, activation='relu')(encoded)
+        
+        # Decoder
+        decoded = layers.Dense(32, activation='relu')(encoded)
+        decoded = layers.Dense(64, activation='relu')(decoded)
+        decoded = layers.Dense(input_dim, activation='linear')(decoded)
+        
+        # Autoencoder model
+        autoencoder = keras.Model(input_layer, decoded)
+        autoencoder.compile(optimizer='adam', loss='mse')
+        
+        return autoencoder
+    
+    def train(self, X_scaled, validation_split=0.2, epochs=100, batch_size=32):
+        """Train autoencoder on normal data"""
+        input_dim = X_scaled.shape[1]
+        self.autoencoder = self.build_autoencoder(input_dim)
+        
+        # Train autoencoder
+        history = self.autoencoder.fit(
+            X_scaled, X_scaled,
+            epochs=epochs,
+            batch_size=batch_size,
+            validation_split=validation_split,
+            shuffle=True,
+            verbose=1
+        )
+        
+        return history
+    
+    def calculate_reconstruction_error(self, X_scaled):
+        """Calculate reconstruction error for anomaly detection"""
+        reconstructed = self.autoencoder.predict(X_scaled)
+        reconstruction_error = np.mean(np.square(X_scaled - reconstructed), axis=1)
+        return reconstruction_error
+    
+    def set_threshold(self, X_scaled, percentile=95):
+        """Set anomaly threshold based on reconstruction error percentile"""
+        reconstruction_error = self.calculate_reconstruction_error(X_scaled)
+        self.threshold = np.percentile(reconstruction_error, percentile)
+        return self.threshold
+    
+    def detect_anomalies(self, X_scaled):
+        """Detect anomalies based on reconstruction error threshold"""
+        reconstruction_error = self.calculate_reconstruction_error(X_scaled)
+        anomalies = reconstruction_error > self.threshold
+        return anomalies, reconstruction_error
+    
+    def visualize_results(self, reconstruction_error, anomalies, timestamps=None):
+        """Visualize anomaly detection results"""
+        plt.figure(figsize=(15, 10))
+        
+        # Plot 1: Reconstruction error over time
+        plt.subplot(2, 2, 1)
+        if timestamps is not None:
+            plt.plot(timestamps, reconstruction_error, alpha=0.7)
+            plt.scatter(timestamps[anomalies], reconstruction_error[anomalies], 
+                       color='red', label='Anomalies', s=20)
+        else:
+            plt.plot(reconstruction_error, alpha=0.7)
+            plt.scatter(np.where(anomalies)[0], reconstruction_error[anomalies], 
+                       color='red', label='Anomalies', s=20)
+        
+        plt.axhline(y=self.threshold, color='red', linestyle='--', label='Threshold')
+        plt.title('Reconstruction Error Over Time')
+        plt.xlabel('Time')
+        plt.ylabel('Reconstruction Error')
+        plt.legend()
+        
+        # Plot 2: Histogram of reconstruction errors
+        plt.subplot(2, 2, 2)
+        plt.hist(reconstruction_error, bins=50, alpha=0.7, edgecolor='black')
+        plt.axvline(x=self.threshold, color='red', linestyle='--', label='Threshold')
+        plt.title('Distribution of Reconstruction Errors')
+        plt.xlabel('Reconstruction Error')
+        plt.ylabel('Frequency')
+        plt.legend()
+        
+        # Plot 3: Anomaly percentage by hour
+        if timestamps is not None:
+            plt.subplot(2, 2, 3)
+            df_temp = pd.DataFrame({
+                'timestamp': timestamps,
+                'anomaly': anomalies
+            })
+            df_temp['hour'] = pd.to_datetime(df_temp['timestamp']).dt.hour
+            hourly_anomalies = df_temp.groupby('hour')['anomaly'].mean() * 100
+            plt.bar(hourly_anomalies.index, hourly_anomalies.values)
+            plt.title('Anomaly Percentage by Hour')
+            plt.xlabel('Hour of Day')
+            plt.ylabel('Anomaly Percentage (%)')
+        
+        # Plot 4: Summary statistics
+        plt.subplot(2, 2, 4)
+        total_samples = len(reconstruction_error)
+        anomaly_count = np.sum(anomalies)
+        anomaly_percentage = (anomaly_count / total_samples) * 100
+        
+        stats_text = f"""
+        Total Samples: {total_samples:,}
+        Anomalies Detected: {anomaly_count:,}
+        Anomaly Rate: {anomaly_percentage:.2f}%
+        Threshold: {self.threshold:.4f}
+        Mean Reconstruction Error: {np.mean(reconstruction_error):.4f}
+        Max Reconstruction Error: {np.max(reconstruction_error):.4f}
+        """
+        
+        plt.text(0.1, 0.5, stats_text, fontsize=12, verticalalignment='center',
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray"))
+        plt.axis('off')
+        plt.title('Anomaly Detection Summary')
+        
+        plt.tight_layout()
+        plt.show()
+    
+    def save_model(self, model_path='anomaly_detector'):
+        """Save trained model and scaler"""
+        self.autoencoder.save(f'{model_path}_autoencoder.h5')
+        joblib.dump(self.scaler, f'{model_path}_scaler.pkl')
+        
+        # Save threshold
+        with open(f'{model_path}_threshold.txt', 'w') as f:
+            f.write(str(self.threshold))
+    
+    def load_model(self, model_path='anomaly_detector'):
+        """Load trained model and scaler"""
+        self.autoencoder = keras.models.load_model(f'{model_path}_autoencoder.h5')
+        self.scaler = joblib.load(f'{model_path}_scaler.pkl')
+        
+        # Load threshold
+        with open(f'{model_path}_threshold.txt', 'r') as f:
+            self.threshold = float(f.read().strip())
+
+# Usage example
+if __name__ == "__main__":
+    # Initialize detector
+    detector = CarbonIntensityAnomalyDetector(encoding_dim=8)
+    
+    # Load data from folder containing 4 CSV files
+    folder_path = "path/to/csv/folder"  # Update this path
+    df = detector.load_data(folder_path)
+    
+    # Preprocess data
+    X_scaled, feature_columns = detector.preprocess_data(df)
+    
+    # Train autoencoder
+    print("Training autoencoder...")
+    history = detector.train(X_scaled, epochs=50, batch_size=64)
+    
+    # Set anomaly threshold
+    threshold = detector.set_threshold(X_scaled, percentile=95)
+    print(f"Anomaly threshold set to: {threshold:.4f}")
+    
+    # Detect anomalies
+    anomalies, reconstruction_error = detector.detect_anomalies(X_scaled)
+    
+    # Visualize results
+    timestamps = df['timestamp'] if 'timestamp' in df.columns else None
+    detector.visualize_results(reconstruction_error, anomalies, timestamps)
+    
+    # Save model
+    detector.save_model('carbon_intensity_anomaly_detector')
+    
+    print(f"Anomaly detection complete!")
+    print(f"Total anomalies detected: {np.sum(anomalies)} out of {len(anomalies)} samples")
+    print(f"Anomaly rate: {(np.sum(anomalies) / len(anomalies)) * 100:.2f}%")

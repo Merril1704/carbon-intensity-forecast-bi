@@ -1,0 +1,42 @@
+{
+  "model_type": "PyTorch LSTM Deep Learning",
+  "model_architecture": {
+    "input_size": 12,
+    "hidden_size": 64,
+    "num_layers": 2,
+    "dropout_rate": 0.2,
+    "lookback_window": 24,
+    "forecast_horizon": 1,
+    "total_parameters": 55873,
+    "trainable_parameters": 55873
+  },
+  "target_variable": "Carbon_intensity_gCO\u2082eq_kWh_direct",
+  "features_used": [
+    "Hour",
+    "Month",
+    "Day",
+    "DayOfWeek",
+    "Quarter",
+    "Zone_encoded",
+    "Renewable_energy_percentage_RE%",
+    "Carbon-free_energy_percentage_CFE%",
+    "Carbon_Efficiency",
+    "Clean_Energy_Gap",
+    "Carbon_Intensity_MA_24h",
+    "RE_Percentage_MA_24h"
+  ],
+  "training_samples": 140160,
+  "test_samples": 35040,
+  "training_history": {
+    "epochs_trained": 41,
+    "final_train_loss": 0.002282332983859347,
+    "final_val_loss": 0.0059756266153056055,
+    "best_val_loss": 0.004719288997377639
+  },
+  "test_metrics": {
+    "MAE": 0.12808015942573547,
+    "RMSE": 0.15201327351913724,
+    "R\u00b2": 0.8331273794174194,
+    "MAPE": 35.86599826812744
+  }
+}

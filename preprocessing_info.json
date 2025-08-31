@@ -1,0 +1,26 @@
+{
+  "original_shape": [
+    175320,
+    25
+  ],
+  "processed_shape": [
+    175320,
+    25
+  ],
+  "numerical_columns_scaled": [
+    "Carbon_intensity_gCO\u2082eq_kWh_direct",
+    "Carbon_intensity_gCO\u2082eq_kWh_Life_cycle",
+    "Carbon-free_energy_percentage_CFE%",
+    "Renewable_energy_percentage_RE%",
+    "DayOfWeek",
+    "WeekOfYear",
+    "Quarter",
+    "Carbon_Efficiency",
+    "Clean_Energy_Gap",
+    "Carbon_Intensity_MA_24h",
+    "RE_Percentage_MA_24h"
+  ],
+  "scaler_used": "StandardScaler",
+  "target_column": "Carbon_intensity_gCO\u2082eq_kWh_direct",
+  "datetime_column": "Datetime_UTC"
+}

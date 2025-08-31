@@ -1,0 +1,176 @@
+{
+  "model_type": "XGBoost Regressor",
+  "model_params": {
+    "objective": "reg:squarederror",
+    "base_score": null,
+    "booster": null,
+    "callbacks": null,
+    "colsample_bylevel": null,
+    "colsample_bynode": null,
+    "colsample_bytree": 0.8,
+    "device": null,
+    "early_stopping_rounds": null,
+    "enable_categorical": false,
+    "eval_metric": null,
+    "feature_types": null,
+    "feature_weights": null,
+    "gamma": null,
+    "grow_policy": null,
+    "importance_type": null,
+    "interaction_constraints": null,
+    "learning_rate": 0.1,
+    "max_bin": null,
+    "max_cat_threshold": null,
+    "max_cat_to_onehot": null,
+    "max_delta_step": null,
+    "max_depth": 8,
+    "max_leaves": null,
+    "min_child_weight": null,
+    "missing": NaN,
+    "monotone_constraints": null,
+    "multi_strategy": null,
+    "n_estimators": 200,
+    "n_jobs": -1,
+    "num_parallel_tree": null,
+    "random_state": 42,
+    "reg_alpha": null,
+    "reg_lambda": null,
+    "sampling_method": null,
+    "scale_pos_weight": null,
+    "subsample": 0.8,
+    "tree_method": null,
+    "validate_parameters": null,
+    "verbosity": null
+  },
+  "target_variable": "Carbon_intensity_gCO\u2082eq_kWh_direct",
+  "features_used": [
+    "Hour",
+    "Month",
+    "Day",
+    "DayOfWeek",
+    "Quarter",
+    "WeekOfYear",
+    "Zone_encoded",
+    "Renewable_energy_percentage_RE%",
+    "Carbon-free_energy_percentage_CFE%",
+    "Carbon_Efficiency",
+    "Clean_Energy_Gap",
+    "Carbon_Intensity_MA_24h",
+    "RE_Percentage_MA_24h"
+  ],
+  "training_samples": 140256,
+  "test_samples": 35064,
+  "test_metrics": {
+    "MAE": 0.05182287988891461,
+    "RMSE": 0.06058183317530407,
+    "R\u00b2": 0.9734995331150906
+  },
+  "feature_importance": [
+    {
+      "feature": "Carbon_Efficiency",
+      "importance": 0.6526755690574646
+    },
+    {
+      "feature": "Carbon_Intensity_MA_24h",
+      "importance": 0.23247893154621124
+    },
+    {
+      "feature": "Carbon-free_energy_percentage_CFE%",
+      "importance": 0.038683053106069565
+    },
+    {
+      "feature": "Zone_encoded",
+      "importance": 0.03635450825095177
+    },
+    {
+      "feature": "Clean_Energy_Gap",
+      "importance": 0.033414002507925034
+    },
+    {
+      "feature": "Hour",
+      "importance": 0.0017442742828279734
+    },
+    {
+      "feature": "RE_Percentage_MA_24h",
+      "importance": 0.0015327463624998927
+    },
+    {
+      "feature": "Renewable_energy_percentage_RE%",
+      "importance": 0.001388566568493843
+    },
+    {
+      "feature": "WeekOfYear",
+      "importance": 0.0007381649920716882
+    },
+    {
+      "feature": "Quarter",
+      "importance": 0.0005536084063351154
+    },
+    {
+      "feature": "Month",
+      "importance": 0.0003218739293515682
+    },
+    {
+      "feature": "Day",
+      "importance": 6.028412462910637e-05
+    },
+    {
+      "feature": "DayOfWeek",
+      "importance": 5.447263902169652e-05
+    }
+  ],
+  "shap_importance": [
+    {
+      "Feature": "Carbon_Efficiency",
+      "SHAP_Importance": 0.7467600107192993
+    },
+    {
+      "Feature": "Carbon_Intensity_MA_24h",
+      "SHAP_Importance": 0.259421706199646
+    },
+    {
+      "Feature": "Carbon-free_energy_percentage_CFE%",
+      "SHAP_Importance": 0.05081391707062721
+    },
+    {
+      "Feature": "Clean_Energy_Gap",
+      "SHAP_Importance": 0.03935042768716812
+    },
+    {
+      "Feature": "RE_Percentage_MA_24h",
+      "SHAP_Importance": 0.03001653589308262
+    },
+    {
+      "Feature": "Renewable_energy_percentage_RE%",
+      "SHAP_Importance": 0.011869871988892555
+    },
+    {
+      "Feature": "WeekOfYear",
+      "SHAP_Importance": 0.0056348079815506935
+    },
+    {
+      "Feature": "Month",
+      "SHAP_Importance": 0.005055056419223547
+    },
+    {
+      "Feature": "Zone_encoded",
+      "SHAP_Importance": 0.003857273142784834
+    },
+    {
+      "Feature": "Hour",
+      "SHAP_Importance": 0.00227787671610713
+    },
+    {
+      "Feature": "Day",
+      "SHAP_Importance": 0.0006866559269838035
+    },
+    {
+      "Feature": "DayOfWeek",
+      "SHAP_Importance": 0.000530236167833209
+    },
+    {
+      "Feature": "Quarter",
+      "SHAP_Importance": 0.00012633143342100084
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+✅ 1. Data Collection and Preprocessing
+
+    Source: Electricity Maps (2021–2024)
+
+    Scope: 5 Indian regions – North, East, South, West, North-East (~175,000 rows)
+
+    Columns:
+
+        Timestamped carbon intensity (direct + lifecycle)
+
+        Carbon-free % (CFE), Renewable % (RE)
+
+        Zone ID and name
+
+        Estimation metadata
+
+Preprocessing includes:
+
+    Handling missing/estimated values (exploratory cleaning)
+
+    Parsing datetime → extracting Year, Month, Day, Hour, WeekOfYear, DayOfWeek, Quarter
+
+    Mapping seasons (Winter, Summer, etc.) and time-of-day bins (Morning, Evening, etc.)
+
+    Engineering metrics:
+
+        Carbon_Efficiency = RE% / Carbon_Intensity
+
+        Clean_Energy_Gap = CFE% - RE%
+
+        24-hour rolling means: Carbon_Intensity_MA_24h, RE_Percentage_MA_24h
+
+    Label encoding: Regional Zone_name → Zone_encoded
+
+⚙️ 2. Data Normalization (Scaling)
+
+    Using StandardScaler or MinMaxScaler (based on model needs)
+
+    Saving scalers as .pkl files for inference pipeline reproducibility
+
+🧪 3. Model Experimentation Stack (Core of Novelty)
+🔮 A. Forecasting Carbon Intensity
+
+    Model 1: LSTM (time-series deep learning)
+
+        Inputs: time window of lagged features (e.g., past 24h or 7d)
+
+        Output: next time-step or multiple-step prediction
+
+    Model 2: XGBoost Regressor
+
+        Tabular model trained on full feature set including time components
+
+        Used as strong, interpretable baseline
+
+    Model 3: Linear Regression
+
+        As a sanity-check baseline, to show traditional models fail to capture non-linearities
+
+⚠️ B. Anomaly Detection
+
+    Autoencoder
+
+        Learns compressed feature representation → reconstruction loss identifies anomalous patterns
+
+    Z-Score method
+
+        Simple statistical detection (e.g., outliers in Carbon Intensity vs. moving average baseline)
+
+🔍 C. Model Explainability
+
+    SHAP (for XGBoost)
+
+        Shows how features like Zone, Hour, Season, RE%, etc., impact predictions
+
+        Can help identify hidden correlations (e.g., carbon intensity peaks in certain hours or zones)
+
+📊 4. Evaluation & Comparison
+
+    Metrics: MAE, RMSE, R² for forecasting; precision/recall or threshold analysis for anomalies
+
+    Cross-validation: TimeSeriesSplit or walk-forward validation
+
+    Ablation studies: E.g., removing rolling averages, excluding time features, trying different window sizes in LSTM
+
+    Model Comparison:
+
+        Tabular vs. time-series models
+
+        SHAP-based explainability
+
+        Anomaly vs. non-anomaly periods
+
+🌍 5. Visualization Layer (BI & Interpretation)
+
+    Zone-wise dashboards (e.g., Eastern India vs. Southern India)
+
+    Heatmaps for:
+
+        Carbon intensity across hours and days
+
+        Seasonal variation
+
+    Line plots with:
+
+        Forecast vs. actual for each zone
+
+        Anomaly detection highlights
+
+    SHAP plots:
+
+        Feature importance
+
+        Force plots for individual predictions
